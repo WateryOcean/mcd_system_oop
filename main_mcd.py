@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+test1
+=======
 from core.inventory_manage import InventoryManager
 from models.inventory import InventoryItem
 from models.menu import McDonaldsFactory
@@ -142,3 +145,4 @@ def main_part():
 if __name__ == "__main__":
     main_part()
  
+>>>>>>> 484856d2e7f504b09709941c0cc3004acaefdc65
