@@ -95,3 +95,122 @@ def pembelian_flow(inv_mgr, purchase_history):
     for inv in inv_mgr.get_all_items():
         TableFormatter.inventory_row(inv)
     TableFormatter.show_footer()
+
+def penjualan_flow(inv_mgr, factory, menu_items, addons_list, sales_history):
+    # Fungsi ini menangani alur kerja Penjualan (Sales/Drive-Thru).
+    # User (kasir) memilih menu, ukuran, dan add-ons untuk pelanggan.
+   
+    print("\n-- Penjualan (Drive-Thru) --")
+   
+    if not menu_items:
+        print("Error: Tidak ada item menu. Silakan tambahkan item di menu Manajemen.")
+        return
+ 
+    cart = [] # List of dicts untuk menyimpan item sementara dalam keranjang belanja pelanggan
+ 
+    # Menampilkan daftar menu yang tersedia
+    TableFormatter.menu_header()
+    for m in menu_items:
+        TableFormatter.menu_item(m)
+    TableFormatter.show_line()
+   
+    # Loop interaksi utama untuk keranjang belanja
+    while True:
+        print(f"\nKeranjang Saat Ini: {len(cart)} item")
+        print("1. Tambah Item")
+        print("2. Hapus Item Terakhir")
+        print("3. Checkout")
+        print("4. Batalkan Pesanan")
+       
+        act = input("Aksi: ").strip()
+       
+        if act not in ['1', '2', '3', '4']:
+            print("Aksi tidak valid.")
+            continue
+       
+        if act == '4':
+            return
+           
+        if act == '2':
+            if cart:
+                removed = cart.pop()
+                print(f"Dihapus {removed['menu_item'].name}")
+            else:
+                print("Keranjang kosong.")
+            continue
+           
+        if act == '3':
+            if not cart:
+                print("Keranjang kosong.")
+                continue
+            break
+           
+        if act == '1':
+            # Logika penambahan item ke keranjang
+            mid = input("Masukkan ID Menu: ").strip()
+            # Prinsip OOP: Iterator (melalui generator expression) untuk mencari item menu berdasarkan ID
+            selected = next((m for m in menu_items if m.item_id.lower() == mid.lower()), None)
+            if not selected:
+                print("Item tidak ditemukan.")
+                continue
+               
+            try:
+                qty = int(input("Jumlah: ").strip())
+                if qty <= 0: raise ValueError
+            except ValueError:
+                print("Jumlah tidak valid.")
+                continue
+ 
+            # Logika Kategori (Category Logic)
+            size = None
+            selected_addons = []
+           
+            # Cek tipe objek (Reflection/Introspection) untuk menentukan apakah Food atau Drink
+            is_drink = "Drink" in selected.__class__.__name__
+            is_food = "Food" in selected.__class__.__name__
+           
+            # Jika minuman, tawarkan opsi ukuran
+            if is_drink:
+                sz = input("Ukuran (S/M/L) [Default M]: ").strip().upper()
+                if sz in ['S', 'M', 'L']:
+                    size = sz
+                else:
+                    size = 'M'
+           
+            # Jika makanan, tawarkan opsi add-ons
+            if is_food and addons_list:
+                print("Add-ons tersedia:")
+                TableFormatter.addons_header()
+                for i, add in enumerate(addons_list):
+                    TableFormatter.addons_row(i+1, add['name'], add['price'])
+               
+                while True:
+                    ao_choice = input("Masukkan No. Add-on (atau 'done'): ").strip()
+                    if ao_choice.lower() == 'done' or ao_choice == '':
+                        break
+                    try:
+                        idx = int(ao_choice) - 1
+                        if 0 <= idx < len(addons_list):
+                            qty_str = input(f"Masukkan jumlah untuk '{addons_list[idx]['name']}' [1]: ").strip()
+                            qty_add = int(qty_str) if qty_str else 1
+                            if qty_add > 0:
+                                for _ in range(qty_add):
+                                    selected_addons.append(addons_list[idx])
+                                print(f"Ditambahkan {qty_add} x {addons_list[idx]['name']}")
+                            else:
+                                print("Jumlah harus positif.")
+                        else:
+                            print("Nomor tidak valid.")
+                    except ValueError:
+                        print("Input tidak valid.")
+ 
+            # Tambahkan item yang sudah dikonfigurasi ke keranjang
+            cart.append({
+                'menu_item': selected,
+                'qty': qty,
+                'size': size,
+                'addons': selected_addons
+            })
+            print(f"Ditambahkan {qty} x {selected.name} ke keranjang.")
+ 
+ 
