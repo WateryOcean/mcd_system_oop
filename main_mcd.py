@@ -426,6 +426,144 @@ def penyediaan_flow(inv_mgr, factory, menu_items, addons_list):
                     print("Jumlah harus positif.")
             except ValueError:
                 print("Jumlah tidak valid.")
-             
+ 
+        elif choice == '6':
+            # Penyesuaian stok manual (buang stok/waste)
+            print("\n-- Buang Stok Manual --")
+            inv_id = input("Masukkan ID Bahan: ").strip()
+            if not inv_id: continue
+           
+            item = inv_mgr.get_item(inv_id)
+            if not item:
+                print(f"Bahan '{inv_id}' tidak ditemukan.")
+                continue
+           
+            qty_str = input(f"Masukkan jumlah untuk dibuang dari '{item.name}': ").strip()
+            if not qty_str: continue
+            try:
+                qty = int(qty_str)
+                if qty > 0:
+                    inv_mgr.discard_stock(inv_id, qty)
+                    print(f"Dibuang {qty} dari {item.name}. Stok baru: {item.getStock()}")
+                else:
+                    print("Jumlah harus positif.")
+            except ValueError:
+                print("Jumlah tidak valid.")
+ 
+        elif choice == '7':
+            # Membuat opsi tambahan (Add-on) baru
+            print("\n-- Buat Add-on --")
+            name = input("Nama Add-on: ").strip()
+            if not name: continue
+            try:
+                price = float(input("Harga: ").strip())
+                ing_id = input("ID Bahan Terkait: ").strip()
+                ing_qty = int(input("Jumlah Bahan dipakai: ").strip())
+                if not inv_mgr.get_item(ing_id):
+                    print("Bahan tidak ditemukan.")
+                    continue
+                addons_list.append({'name': name, 'price': price, 'inv_id': ing_id, 'qty': ing_qty})
+                print("Add-on dibuat.")
+            except ValueError:
+                print("Input tidak valid.")
+ 
+        elif choice == '8':
+            # Menghapus opsi Add-on
+            try:
+                idx = int(input("Masukkan No. Add-on untuk dihapus: ").strip()) - 1
+                if 0 <= idx < len(addons_list):
+                    removed = addons_list.pop(idx)
+                    print(f"Dihapus {removed['name']}")
+            except ValueError: pass
+        else:
+            print("Opsi tidak valid.")
  
  
+def riwayat_flow(purchase_history, sales_history):
+    # Fungsi ini menampilkan riwayat transaksi yang telah terjadi.
+    while True:
+        print("\n-- Riwayat Pembelian dan Penjualan --")
+        print("1. Riwayat Pembelian (Stock In)")
+        print("2. Riwayat Penjualan (Sales)")
+        print("3. Kembali")
+       
+        choice = input("Pilih opsi: ").strip()
+       
+        if choice == '3':
+            break
+           
+        if choice == '1':
+            # Menampilkan log pembelian stok
+            print("\n--- Riwayat Pembelian ---")
+            if not purchase_history:
+                print("Tidak ada riwayat pembelian.")
+            else:
+                for p in purchase_history:
+                    print(f"ID: {p.purchase_id}")
+                    for item, qty in p.get_items():
+                        print(f" - {item.name}: {qty}")
+                    print("-" * 20)
+            input("Tekan Enter untuk lanjut...")
+ 
+        elif choice == '2':
+            # Menampilkan log penjualan (struk)
+            print("\n--- Riwayat Penjualan ---")
+            if not sales_history:
+                print("Tidak ada riwayat penjualan.")
+            else:
+                for i, order in enumerate(sales_history, 1):
+                    print(f"\n[Struk #{i}]")
+                    TableFormatter.print_receipt(order)
+            input("Tekan Enter untuk lanjut...")
+ 
+ 
+def interactive_menu():
+    # Fungsi utama (Main Entry Point) aplikasi.
+    # Inisialisasi komponen utama: InventoryManager (Singleton) dan Factory.
+    inv_mgr = InventoryManager()
+    factory = McDonaldsFactory()
+   
+    # Seeding Data: Menambahkan bahan baku awal jika inventaris kosong
+    if len(inv_mgr.get_all_items()) == 0:
+        inv_mgr.add_item(InventoryItem("INV01","Big Mac Bun",100))
+        inv_mgr.add_item(InventoryItem("INV02","Beef Patty",100))
+        inv_mgr.add_item(InventoryItem("INV03","Cheese Slice",50))
+        inv_mgr.add_item(InventoryItem("INV04","Chicken Meat",80))
+        inv_mgr.add_item(InventoryItem("INV05","Coke Syrup",200))
+        inv_mgr.add_item(InventoryItem("INV06","Vanilla Ice Cream",40))
+ 
+    # Inisialisasi daftar Add-ons default
+    addons_list = [{'name': 'Extra Cheese', 'price': 4000, 'inv_id': 'INV03', 'qty': 1}]
+ 
+    # Membangun menu default menggunakan Factory
+    menu_items = build_default_menu(factory)
+ 
+    purchase_history = []
+    sales_history = []
+ 
+    # Loop Menu Utama Aplikasi
+    while True:
+        print("\n--- Menu Utama ---")
+        print("1. Pembelian (Purchase stock)")
+        print("2. Penjualan (Drive-Thru order)")
+        print("3. Persediaan (View Inventory)")
+        print("4. Riwayat Pembelian dan Penjualan")
+        print("5. Keluar")
+        choice = input("Pilih opsi: ").strip()
+        if choice == '1':
+            pembelian_flow(inv_mgr, purchase_history)
+        elif choice == '2':
+            penjualan_flow(inv_mgr, factory, menu_items, addons_list, sales_history)
+        elif choice == '3':
+            penyediaan_flow(inv_mgr, factory, menu_items, addons_list)
+        elif choice == '4':
+            riwayat_flow(purchase_history, sales_history)
+        elif choice == '5':
+            print("GOODBYE!")
+            break
+        else:
+            print("Pilihan tidak valid.")
+ 
+ 
+if __name__ == "__main__":
+    interactive_menu()             

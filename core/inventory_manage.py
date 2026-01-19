@@ -46,4 +46,3 @@ class InventoryManager:
             return False
         itm.removeStock(qty)
         return True
- 

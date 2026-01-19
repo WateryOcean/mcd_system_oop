@@ -14,4 +14,3 @@ class Purchase:
     @property
     def purchase_id(self):
         return self.__purchase_id
- 

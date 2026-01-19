@@ -40,4 +40,3 @@ class InventoryItem:
  
     def getStock(self):
         return self.__stock
- 

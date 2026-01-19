@@ -72,5 +72,3 @@ class McDonaldsFactory:
         else:
             # Error Handling: Melempar exception jika kategori tidak valid
             raise ValueError(f"Kategori tidak valid: '{category}'. Pilih 'Food' atau 'Drink'.")
- 
- 

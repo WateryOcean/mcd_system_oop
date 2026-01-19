@@ -92,4 +92,3 @@ class TableFormatter:
         total_str = f"Rp{order.calculateTotal():,.0f}".replace(",", ".")
         print(f"{'GRAND TOTAL':<32}{total_str:>16}")
         print("="*50)
- 
