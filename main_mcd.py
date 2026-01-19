@@ -331,5 +331,101 @@ def penyediaan_flow(inv_mgr, factory, menu_items, addons_list):
                 print(f"Bahan '{inv_id}' dihapus.")
             else:
                 print(f"Bahan '{inv_id}' tidak ditemukan.")
+                
+        elif choice == '3':
+            # Menambah item menu baru (Food/Drink) beserta resepnya
+            print("\n-- Tambah Item Menu Baru --")
+            cat = input("Kategori (Food/Drink): ").strip()
+            if not cat: continue
+            mid = input("ID Menu: ").strip()
+            if not mid: continue
+            if any(m.item_id.lower() == mid.lower() for m in menu_items):
+                print(f"ID Menu '{mid}' sudah ada.")
+                continue
+            name = input("Nama Menu: ").strip()
+            if not name: continue
+            try:
+                p_str = input("Harga: ").strip()
+                if not p_str: continue
+                price = float(p_str)
+                if price < 0:
+                    print("Harga tidak boleh negatif.")
+                    continue
+            except ValueError:
+                print("Harga tidak valid.")
+                continue
+           
+            # Definisi Resep: Menghubungkan menu dengan bahan baku yang dibutuhkan
+            print("Definisikan Resep (Bahan):")
+            recipe = {}
+            while True:
+                ing_id = input("Masukkan ID Bahan (atau 'done'): ").strip()
+                if ing_id.lower() == 'done':
+                    break
+                if not ing_id: continue
+               
+                if not inv_mgr.get_item(ing_id):
+                    print(f"Bahan '{ing_id}' tidak ditemukan di inventaris. Tambahkan dulu.")
+                    continue
+               
+                try:
+                    qty = int(input(f"Jumlah '{ing_id}' yang dibutuhkan: ").strip())
+                    if qty > 0:
+                        recipe[ing_id] = qty
+                except ValueError:
+                    print("Jumlah tidak valid.")
+           
+            if not recipe:
+                print("Resep kosong. Item menu tidak dibuat.")
+                continue
+ 
+            try:
+                # Menggunakan Factory untuk membuat objek menu baru
+                new_item = factory.create_menu_item(cat, mid, name, price, recipe)
+                menu_items.append(new_item)
+                print(f"Item menu '{name}' dibuat.")
+            except Exception as e:
+                print(f"Error: {e}")
+ 
+        elif choice == '4':
+            # Menghapus item menu
+            print("\n-- Hapus Item Menu --")
+            mid = input("Masukkan ID Menu untuk dihapus: ").strip()
+            if not mid:
+                continue
+            found_idx = -1
+            for i, m in enumerate(menu_items):
+                if m.item_id.lower() == mid.lower():
+                    found_idx = i
+                    break
+            if found_idx != -1:
+                removed = menu_items.pop(found_idx)
+                print(f"Item menu '{removed.name}' dihapus.")
+            else:
+                print(f"ID Menu '{mid}' tidak ditemukan.")
+ 
+        elif choice == '5':
+            # Penyesuaian stok manual (tambah stok tanpa transaksi pembelian)
+            print("\n-- Tambah Stok Manual --")
+            inv_id = input("Masukkan ID Bahan: ").strip()
+            if not inv_id: continue
+           
+            item = inv_mgr.get_item(inv_id)
+            if not item:
+                print(f"Bahan '{inv_id}' tidak ditemukan.")
+                continue
+           
+            qty_str = input(f"Masukkan jumlah untuk ditambahkan ke '{item.name}': ").strip()
+            if not qty_str: continue
+            try:
+                qty = int(qty_str)
+                if qty > 0:
+                    inv_mgr.increase_stock(inv_id, qty)
+                    print(f"Ditambahkan {qty} ke {item.name}. Stok baru: {item.getStock()}")
+                else:
+                    print("Jumlah harus positif.")
+            except ValueError:
+                print("Jumlah tidak valid.")
+             
  
  
