@@ -213,4 +213,123 @@ def penjualan_flow(inv_mgr, factory, menu_items, addons_list, sales_history):
             })
             print(f"Ditambahkan {qty} x {selected.name} ke keranjang.")
  
+    # Pemilihan Metode Pembayaran
+    print("\nPilih Metode Pembayaran:")
+    print("1. Tunai (Cash)")
+    print("2. Kartu (Card)")
+    print("3. Transfer (OVO, QRIS, VA)")
+    pay_opt = input("Pilihan: ").strip()
+    payment_method = "Cash"
+    if pay_opt == '2': payment_method = "Card"
+    elif pay_opt == '3':
+        print("  a. OVO\n  b. QRIS\n  c. Virtual Account")
+        sub = input("  Pilih Transfer: ").strip().lower()
+        if sub == 'a': payment_method = "Transfer (OVO)"
+        elif sub == 'b': payment_method = "Transfer (QRIS)"
+        elif sub == 'c': payment_method = "Transfer (VA)"
+        else: payment_method = "Transfer"
+ 
+    # Design Pattern: Facade (StoreFacade)
+    # Memproses penjualan: validasi stok, pengurangan stok, dan pembuatan objek Order.
+    facade = StoreFacade(inv_mgr)
+    try:
+        order, used_ingredients = facade.process_sale(cart)
+        order.payment_method = payment_method
+        order.timestamp = datetime.datetime.now()
+        # Simpan transaksi ke riwayat penjualan
+        sales_history.append(order)
+    except InsufficientStockError as e:
+        # Error Handling: Menangkap error jika stok tidak cukup dan menampilkan pesan ke user
+        print(f"Tidak dapat menyelesaikan pesanan: {e}")
+        return
+    except ValueError as e:
+        print(f"Error memproses pesanan: {e}")
+        return
+ 
+    # Mencetak Struk (Receipt) ke layar
+    TableFormatter.print_receipt(order)
+ 
+    # Menampilkan rincian bahan baku yang terpakai dalam transaksi ini (untuk informasi internal)
+    if used_ingredients:
+        TableFormatter.ingredients_header()
+        for inv_id, amt in used_ingredients.items():
+            inv_item = inv_mgr.get_item(inv_id)
+            name = inv_item.name if inv_item is not None else inv_id
+            TableFormatter.ingredients_row(inv_id, name, amt)
+        TableFormatter.show_footer()
+ 
+    # Menampilkan sisa stok inventaris setelah transaksi selesai
+    print("\nInventaris setelah penjualan:")
+    TableFormatter.inventory_header()
+    for inv in inv_mgr.get_all_items():
+        TableFormatter.inventory_row(inv)
+    TableFormatter.show_footer()
+ 
+ 
+def penyediaan_flow(inv_mgr, factory, menu_items, addons_list):
+    # Fungsi ini menangani alur Manajemen (Penyediaan/Back Office).
+    # Memungkinkan admin untuk melihat dan mengubah data master (Menu, Bahan, Add-ons, Stok).
+    while True:
+        print("\n-- Penyediaan (Management View) --")
+       
+        print("\n--- Menu Items ---")
+        TableFormatter.menu_header()
+        for m in menu_items:
+            TableFormatter.menu_item(m)
+        TableFormatter.show_line()
+ 
+        print("\n--- Ingredients ---")
+        TableFormatter.inventory_header()
+        for inv in inv_mgr.get_all_items():
+            TableFormatter.inventory_row(inv)
+        TableFormatter.show_footer()
+ 
+        print("\n--- Add-ons ---")
+        TableFormatter.addons_header()
+        for i, a in enumerate(addons_list):
+            TableFormatter.addons_row(i+1, a['name'], a['price'])
+        TableFormatter.show_footer()
+ 
+        print("\nOpsi Manajemen:")
+        print("1. Tambah Bahan Baru")
+        print("2. Hapus Bahan")
+        print("3. Tambah Item Menu Baru")
+        print("4. Hapus Item Menu")
+        print("5. Tambah Stok (Manual)")
+        print("6. Buang Stok (Manual)")
+        print("7. Tambah Add-on Baru")
+        print("8. Hapus Add-on")
+        print("B. Kembali ke Menu Utama")
+ 
+        choice = input("Pilih aksi: ").strip().lower()
+ 
+        if choice == 'b':
+            return
+ 
+        if choice == '1':
+            # Menambah jenis bahan baku baru ke sistem
+            print("\n-- Tambah Bahan Baru --")
+            inv_id = input("Masukkan ID bahan baru: ").strip()
+            if not inv_id:
+                continue
+            if inv_mgr.get_item(inv_id):
+                print(f"ID Bahan '{inv_id}' sudah ada.")
+                continue
+            name = input("Masukkan Nama: ").strip()
+            if not name:
+                continue
+            inv_mgr.add_item(InventoryItem(inv_id, name, 0))
+            print(f"Bahan '{name}' berhasil ditambahkan.")
+ 
+        elif choice == '2':
+            # Menghapus jenis bahan baku dari sistem
+            print("\n-- Hapus Bahan --")
+            inv_id = input("Masukkan ID Bahan untuk dihapus: ").strip()
+            if not inv_id:
+                continue
+            if inv_mgr.remove_item(inv_id):
+                print(f"Bahan '{inv_id}' dihapus.")
+            else:
+                print(f"Bahan '{inv_id}' tidak ditemukan.")
+ 
  
