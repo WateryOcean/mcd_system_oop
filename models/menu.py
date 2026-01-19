@@ -40,4 +40,3 @@ class McDonaldsFactory:
             return DrinkItem(item_id, name, price, recipe)
         else:
             raise ValueError(f"Invalid category: '{category}'. Choose 'Food' or 'Drink'.")
- 

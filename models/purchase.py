@@ -1,4 +1,5 @@
 class Purchase:
+    # Kelas sederhana untuk menampung data transaksi pembelian stok (Restock).
     def __init__(self, purchase_id: str):
         self.__purchase_id = purchase_id
         self.__purchase_items = []
@@ -7,6 +8,10 @@ class Purchase:
         if quantity > 0:
             self.__purchase_items.append((inv_item, quantity))
  
-    def applyToInventory(self):
-        for inv_item, qty in self.__purchase_items:
-            inv_item.increaseStock(qty)
+    def get_items(self):
+        return list(self.__purchase_items)
+ 
+    @property
+    def purchase_id(self):
+        return self.__purchase_id
+ 
